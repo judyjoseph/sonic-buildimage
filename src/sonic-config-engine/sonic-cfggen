@@ -211,6 +211,7 @@ def main():
     group.add_argument("--preset", help="generate sample configuration from a preset template", choices=get_available_config())
     group = parser.add_mutually_exclusive_group()
     group.add_argument("-K", "--key", help="Lookup for a specific key")
+    parser.add_argument("-n", "--namespace", help="Namespace string to use asic0/asic1.../asicn", default=None)
     args = parser.parse_args()
 
     platform = get_platform_info(get_machine_info())
@@ -262,7 +263,11 @@ def main():
         deep_update(data, json.loads(args.additional_data))
 
     if args.from_db:
-        configdb = ConfigDBConnector(**db_kwargs)
+        if args.namespace is None:
+            configdb = ConfigDBConnector(**db_kwargs)
+        else:
+            configdb = ConfigDBConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
+
         configdb.connect()
         deep_update(data, FormatConverter.db_to_output(configdb.get_config()))
 
@@ -302,7 +307,11 @@ def main():
             print(json.dumps(FormatConverter.to_serialized(data[args.var_json]), indent=4, cls=minigraph_encoder))
 
     if args.write_to_db:
-        configdb = ConfigDBConnector(**db_kwargs)
+        if args.namespace is None:
+            configdb = ConfigDBConnector(**db_kwargs)
+        else:
+            configdb = ConfigDBConnector(use_unix_socket_path=True, namespace=args.namespace, **db_kwargs)
+
         configdb.connect(False)
         configdb.mod_config(FormatConverter.output_to_db(data))
 
