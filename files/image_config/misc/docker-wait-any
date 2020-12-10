@@ -47,17 +47,17 @@ g_dep_services = []
 
 def wait_for_container(docker_client, container_name):
     while True:
-        while docker_client.inspect_container(container_name)['State']['Status'] != "running":
-            time.sleep(1)
-
         docker_client.wait(container_name)
 
         log.log_info("No longer waiting on container '{}'".format(container_name))
 
         # If this is a dependent service and warm restart is enabled for the system/container,
         # OR if the system is going through a fast-reboot, DON'T signal main thread to exit
+        # Wait for the process to move to running state only in case when dep_service warm/fast boot is enabled.
         if (container_name in g_dep_services and
                 (device_info.is_warm_restart_enabled(container_name) or device_info.is_fast_reboot_enabled())):
+            while docker_client.inspect_container(container_name)['State']['Status'] != "running":
+                time.sleep(1)
             continue
 
         # Signal the main thread to exit
