@@ -57,17 +57,19 @@ config_chassis_db() {
 
     # Introduce additional checks so that the chassis_db_address is valid
     # Check if the IP address is not 0.0.0.0
-    if [[ "$midplane_interface_ip" == "0.0.0.0" ]]; then
+    if [[ "$chassis_db_address" == "0.0.0.0" ]]; then
         echo "Error: chassis_db address configured as 0.0.0.0"
+        [ ! -e $chassisdb_address_file ] || rm $chassisdb_address_file
         exit 0
     fi
     # if the midplane subnet is defined make sure the IP address is part of the midplane subnet
     if [[ -n "$midplane_subnet" ]]; then
-        match=$(python3 -c "import ipaddress; print(ipaddress.ip_address('$midplane_interface_ip') \
+        match=$(python3 -c "import ipaddress; print(ipaddress.ip_address('$chassis_db_address') \
               in ipaddress.ip_network('$midplane_subnet'))")
-        # Exit as error if not in the midplane subnet
+        # Exit as error if chassis_db_address not in the midplane subnet
         if [[ $result == False ]]; then
-            echo "Error: chassis_db address does not belong to midplane subnet"
+            echo "Error: chassis_db address does not belog to midplane subnet"
+            [ ! -e $chassisdb_address_file ] || rm $chassisdb_address_file
             exit 0
         fi
     fi
