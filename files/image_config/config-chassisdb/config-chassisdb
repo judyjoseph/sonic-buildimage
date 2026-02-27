@@ -41,21 +41,6 @@ config_chassis_db() {
 
     # Generate the chassisdb_address_file from the midplane interface ip address
     if [[ -n "$midplane_interface_ip" ]]; then
-        # Check if the IP address is not 0.0.0.0
-        if [[ "$midplane_interface_ip" == "0.0.0.0" ]]; then
-            echo "Error: chassis_db address configured as 0.0.0.0"
-            exit 0
-        fi
-        # if the midplane subnet is defined make sure the IP address is part of the midplane subnet
-        if [[ -n "$midplane_subnet" ]]; then
-            match=$(python3 -c "import ipaddress; print(ipaddress.ip_address('$midplane_interface_ip') \
-                  in ipaddress.ip_network('$midplane_subnet'))")
-            # Exit as error if not in the midplane subnet
-            if [[ $result == False ]]; then
-                echo "Error: chassis_db address does not belog to midplane subnet"
-                exit 0
-            fi
-        fi
         chassis_db_address="$midplane_interface_ip" j2 /usr/share/sonic/templates/chassisdb_address.j2 > "$chassisdb_address_file"
     else
         echo "Error: No IP address configured on $midplane_interface"
@@ -64,9 +49,29 @@ config_chassis_db() {
 
     start_chassis_db=0
     chassis_db_address=""
+
+    # source the platform/sku level chassisdb.conf, if the file exists
     source $chassis_config
-    # source the chassisdb_address_file, if the file exists
+    # source the new chassisdb_address_file, if the file exists
     [ -f $chassisdb_address_file ] && source $chassisdb_address_file
+
+    # Introduce additional checks so that the chassis_db_address is valid
+    # Check if the IP address is not 0.0.0.0
+    if [[ "$midplane_interface_ip" == "0.0.0.0" ]]; then
+        echo "Error: chassis_db address configured as 0.0.0.0"
+        exit 0
+    fi
+    # if the midplane subnet is defined make sure the IP address is part of the midplane subnet
+    if [[ -n "$midplane_subnet" ]]; then
+        match=$(python3 -c "import ipaddress; print(ipaddress.ip_address('$midplane_interface_ip') \
+              in ipaddress.ip_network('$midplane_subnet'))")
+        # Exit as error if not in the midplane subnet
+        if [[ $result == False ]]; then
+            echo "Error: chassis_db address does not belong to midplane subnet"
+            exit 0
+        fi
+    fi
+
     if [[ "$start_chassis_db" == "1" ]]; then
        cp $chassis_config $startdb_file
        echo "start chassisdb"
