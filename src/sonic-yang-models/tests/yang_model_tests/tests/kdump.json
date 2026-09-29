@@ -39,5 +39,12 @@
     "KDUMP_WITH_INVALID_SSH_STRING_USERNAME": {
         "desc": "Configure ssh_string with username starting with invalid character.",
         "eStrKey": "Pattern"
+    },
+    "KDUMP_WITH_VALID_RUNTIME_VALUES": {
+        "desc": "Configuring the kdump with valid zero-downtime runtime reservation values."
+    },
+    "KDUMP_WITH_INVALID_RUNTIME_MEMORY": {
+        "desc": "Configuring kdump runtime memory with a non-numeric value.",
+        "eStrKey": "Pattern"
     }
 }

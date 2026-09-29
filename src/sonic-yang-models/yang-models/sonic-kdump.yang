@@ -76,6 +76,35 @@ module sonic-kdump {
 
                 }
 
+                leaf runtime_arm {
+                    type boolean;
+                    description
+                        "Zero-downtime kdump: reserve crash-kernel memory on the
+                        running kernel with no reboot and no crashkernel= boot
+                        parameter. Requires a kernel built with the in-tree
+                        sonic_kdump_runtime driver (CONFIG_SONIC_KDUMP_RUNTIME=y).";
+                }
+
+                leaf runtime_high_memory {
+                    type string {
+                        pattern "[0-9]+";
+                    }
+                    description
+                        "Size in MB of the high region (may live above 4GB)
+                        reserved for the capture kernel when runtime_arm is true.
+                        Maps to crashk_res.";
+                }
+
+                leaf runtime_low_memory {
+                    type string {
+                        pattern "[0-9]+";
+                    }
+                    description
+                        "Size in MB of the low (<4GB) region reserved for the
+                        capture kernel when runtime_arm is true. Maps to
+                        crashk_low_res. Use 0 to skip the low reservation.";
+                }
+
             }
         }
     }
